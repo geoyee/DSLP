@@ -9,13 +9,13 @@ except ImportError:
 
 
 # TODO: Test
-def readSAR(img_path: str, to_uint8: bool=True) -> np.ndarray:
+def readGray(img_path: str, to_uint8: bool=True) -> np.ndarray:
     if not osp.exists(img_path):
         raise ValueError("The {} does not exist.".format(img_path))
     img = gdal.Open(img_path)
     if img.RasterCount != 1:
-        raise ValueError("This file is not a SAR data.")
-    img_data = abs(img.ReadAsArray())  # amplitude
+        raise ValueError("This file is not a Gray data.")
+    img_data = img.ReadAsArray()
     if to_uint8:
         img_data = rasterToUint8(img_data, img_data.dtype.name)
     return img_data

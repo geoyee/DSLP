@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 import operator
 from functools import reduce
 
@@ -26,40 +25,33 @@ def rasterToUint8(image: np.array, dtype: str="uint8") -> np.array:
 # 2% linear stretch
 def _twoPercentLinear(image: np.array, max_out: int=255, min_out: int=0) -> np.array:
     def _gray_process(gray, maxout=max_out, minout=min_out):
-        high_value = np.percentile(gray, 98)  # Get the corresponding gray level at 98% histogram
+        # Get the corresponding gray level at 98% histogram
+        high_value = np.percentile(gray, 98)
         low_value = np.percentile(gray, 2)
         truncated_gray = np.clip(gray, a_min=low_value, a_max=high_value)
         processed_gray = ((truncated_gray - low_value) / (high_value - low_value)) * (maxout - minout)
         return processed_gray
-    if len(image.shape) == 3 and image.shape[-1] == 3:
-        b, g, r = cv2.split(image)
-        r_p = _gray_process(r)
-        g_p = _gray_process(g)
-        b_p = _gray_process(b)
-        result = cv2.merge((b_p, g_p, r_p))
-    elif len(image.shape) == 2:
+    if len(image.shape) == 3:
+        processes = []
+        for b in range(image.shape[-1]):
+            processes.append(_gray_process(image[:, :, b]))
+        result = np.stack(processes, axis=2)
+    else:  # if len(image.shape) == 2
         result = _gray_process(image)
-    else:
-        raise ValueError(f"image.shape[-1] must be 1 or 3, but {image.shape[-1]}.")
     return np.uint8(result)
 
 
 # Simple image standardization
 def _sampleNorm(image: np.array, NUMS: int=65536) -> np.array:
-    if NUMS == 256:
-        return np.uint8(image)
-    if len(image.shape) == 3 and image.shape[-1] == 3:
-        stretched_r = _stretch(image[:, :, 0], NUMS)
-        stretched_g = _stretch(image[:, :, 1], NUMS)
-        stretched_b = _stretch(image[:, :, 2], NUMS)
-        stretched_img = cv2.merge([
-                stretched_r / float(NUMS),
-                stretched_g / float(NUMS),
-                stretched_b / float(NUMS)])
-    elif len(image.shape) == 2:
+    stretches = []
+    if len(image.shape) == 3:
+        for b in range(image.shape[-1]):
+            stretched = _stretch(image[:, :, b], NUMS)
+            stretched /= float(NUMS)
+            stretches.append(stretched)
+        stretched_img = np.stack(stretches, axis=2)
+    else:  # if len(image.shape) == 2
         stretched_img = _stretch(image, NUMS)
-    else:
-        raise ValueError(f"image.shape[-1] must be 1 or 3, but {image.shape[-1]}.")
     return np.uint8(stretched_img * 255)
 
 
