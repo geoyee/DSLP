@@ -1,0 +1,1 @@
+# TODO: Remote sensing sliding frame prediction, splicing and projection

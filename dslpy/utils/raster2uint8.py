@@ -3,14 +3,14 @@ import operator
 from functools import reduce
 
 
-def rasterToUint8(image: np.array, dtype: str="uint8") -> np.array:
+def rasterToUint8(image: np.ndarray) -> np.ndarray:
     """ Convert raster to uint8.
     Args:
-        image (np.array): image.
-        dtype (str): type of image.
+        image (np.ndarray): image.
     Returns:
-        np.array: image on uint8.
+        np.ndarray: image on uint8.
     """
+    dtype = image.dtype.name
     dtypes = ["uint8", "uint16", "float32"]
     if dtype not in dtypes:
         raise ValueError(f"'dtype' must be uint8/uint16/float32, not {dtype}.")
@@ -23,7 +23,7 @@ def rasterToUint8(image: np.array, dtype: str="uint8") -> np.array:
 
 
 # 2% linear stretch
-def _twoPercentLinear(image: np.array, max_out: int=255, min_out: int=0) -> np.array:
+def _twoPercentLinear(image: np.ndarray, max_out: int=255, min_out: int=0) -> np.ndarray:
     def _gray_process(gray, maxout=max_out, minout=min_out):
         # Get the corresponding gray level at 98% histogram
         high_value = np.percentile(gray, 98)
@@ -42,7 +42,7 @@ def _twoPercentLinear(image: np.array, max_out: int=255, min_out: int=0) -> np.a
 
 
 # Simple image standardization
-def _sampleNorm(image: np.array, NUMS: int=65536) -> np.array:
+def _sampleNorm(image: np.ndarray, NUMS: int=65536) -> np.ndarray:
     stretches = []
     if len(image.shape) == 3:
         for b in range(image.shape[-1]):
@@ -56,7 +56,7 @@ def _sampleNorm(image: np.array, NUMS: int=65536) -> np.array:
 
 
 # Histogram equalization
-def _stretch(ima: np.array, NUMS: int) -> np.array:
+def _stretch(ima: np.ndarray, NUMS: int) -> np.ndarray:
     hist = _histogram(ima, NUMS)
     lut = []
     for bt in range(0, len(hist), NUMS):
@@ -72,7 +72,7 @@ def _stretch(ima: np.array, NUMS: int) -> np.array:
 
 
 # Calculate histogram
-def _histogram(ima: np.array, NUMS: int) -> np.array:
+def _histogram(ima: np.ndarray, NUMS: int) -> np.ndarray:
     bins = list(range(0, NUMS))
     flat = ima.flat
     n = np.searchsorted(np.sort(flat), bins)
